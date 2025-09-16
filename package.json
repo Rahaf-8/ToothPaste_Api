@@ -1,0 +1,43 @@
+{
+  "name": "toothpaste_api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rahaf-8/ToothPaste_Api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Rahaf-8/ToothPaste_Api/issues"
+  },
+  "homepage": "https://github.com/Rahaf-8/ToothPaste_Api#readme",
+  "description": "",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.7.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "hpp": "^0.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "mime-types": "^3.0.1",
+    "mongoose": "^8.18.1",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "xss": "^1.0.15",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "eslint": "^9.35.0",
+    "nodemon": "^3.1.10"
+  }
+}

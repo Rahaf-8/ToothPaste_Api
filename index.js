@@ -1,0 +1,57 @@
+const express = require('express');
+const path = require('path');
+const cfg = require('./config');
+const { connect } = require('./db');
+const { security } = require('./middlewares/security');
+const bcrypt = require('bcryptjs');
+
+const User = require('./models/User');
+const authRoutes = require('./routes/authRoutes');
+const productRoutes = require('./routes/productsRoutes');
+const blogRoutes = require('./routes/blogsRoutes');
+const faqRoutes = require('./routes/faqRoutes');
+
+async function bootstrapAdmin() {
+  const count = await User.countDocuments();
+  if (count === 0 && cfg.adminBootstrap.email && cfg.adminBootstrap.password) {
+    const hash = await bcrypt.hash(cfg.adminBootstrap.password, 12);
+    await User.create({ email: cfg.adminBootstrap.email, passwordHash: hash, role: 'admin' });
+    console.log(`[Bootstrap] Admin created: ${cfg.adminBootstrap.email}`);
+  }
+}
+
+async function main() {
+  await connect(cfg.mongoUri);
+  await bootstrapAdmin();
+
+  const app = express();
+  // parsers أولاً
+  app.use(express.json({ limit: '2mb' }));
+  app.use(express.urlencoded({ extended: true }));
+  // ثم الأمان
+  security(app);
+
+  // static للرفع المحلي في الديف (لو Cloudinary مش متفعّل)
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+  app.get('/healthz', (_req, res) => res.json({ ok: true, env: cfg.env }));
+
+  // APIs
+  app.use('/api/auth', authRoutes);
+  app.use('/api/products', productRoutes);
+  app.use('/api/blogs', blogRoutes);
+  app.use('/api/faqs', faqRoutes);
+
+  // 404
+  app.use((req, res) => res.status(404).json({ error: 'Not found' }));
+
+  // Error handler
+  app.use((err, _req, res, _next) => {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+
+  app.listen(cfg.port, () => console.log(`Server on :${cfg.port}`));
+}
+
+main().catch(err => { console.error('Fatal startup error:', err); process.exit(1); });

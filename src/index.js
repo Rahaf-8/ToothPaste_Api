@@ -1,15 +1,19 @@
 const express = require('express');
 const path = require('path');
+
 const cfg = require('./config');
 const { connect } = require('./db');
 const { security } = require('./middlewares/security');
-const bcrypt = require('bcryptjs');
 
+const bcrypt = require('bcryptjs');
 const User = require('./models/User');
-const authRoutes = require('./routes/authRoutes');
+
+// Routers
+const adminRoutes   = require('./routes/admin');
+const authRoutes    = require('./routes/authRoutes');
 const productRoutes = require('./routes/productsRoutes');
-const blogRoutes = require('./routes/blogsRoutes');
-const faqRoutes = require('./routes/faqRoutes');
+const blogRoutes    = require('./routes/blogsRoutes');
+const faqRoutes     = require('./routes/faqRoutes');
 
 async function bootstrapAdmin() {
   const count = await User.countDocuments();
@@ -25,33 +29,45 @@ async function main() {
   await bootstrapAdmin();
 
   const app = express();
-  // parsers أولاً
+
+  // لو ورا بروكسي (Render/Nginx)؛ يفيد req.ip
+  app.set('trust proxy', true);
+
+  // parsers
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true }));
-  // ثم الأمان
+
+  // security bundle (helmet + cors + rate-limit + hpp + sanitize ...)
   security(app);
 
-  // static للرفع المحلي في الديف (لو Cloudinary مش متفعّل)
+  // static (للرفع المحلي لو Cloudinary مش مفعّل)
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+  // health
   app.get('/healthz', (_req, res) => res.json({ ok: true, env: cfg.env }));
 
-  // APIs
-  app.use('/api/auth', authRoutes);
+  // ====== API ROUTES (قبل 404) ======
+  app.use('/api/admin',    adminRoutes);
+  app.use('/api/auth',     authRoutes);
   app.use('/api/products', productRoutes);
-  app.use('/api/blogs', blogRoutes);
-  app.use('/api/faqs', faqRoutes);
+  app.use('/api/blogs',    blogRoutes);
+  app.use('/api/faqs',     faqRoutes);
+  // ====== END API ROUTES ======
 
-  // 404
+  // 404 لازم آخر حاجة
   app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 
-  // Error handler
+  // error handler عام
   app.use((err, _req, res, _next) => {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
   });
 
-  app.listen(cfg.port, () => console.log(`Server on :${cfg.port}`));
+  const port = process.env.PORT || cfg.port || 8080;
+  app.listen(port, () => console.log(`Server on :${port}`));
 }
 
-main().catch(err => { console.error('Fatal startup error:', err); process.exit(1); });
+main().catch(err => {
+  console.error('Fatal startup error:', err);
+  process.exit(1);
+});

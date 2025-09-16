@@ -1,4 +1,4 @@
-// يمنع مفاتيح مثل $gt, __proto__, constructor لتجنب NoSQL/Prototype pollution
+
 function scan(obj, path = []) {
   if (obj == null) return;
   if (Array.isArray(obj)) return obj.forEach((v, i) => scan(v, path.concat(String(i))));

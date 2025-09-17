@@ -12,7 +12,7 @@ const router = express.Router();
 
 function isObjectId(s) { return mongoose.Types.ObjectId.isValid(s); }
 
-// ======= Public: list + detail =======
+
 router.get('/', async (req, res) => {
   const page = Math.max(parseInt(req.query.page || '1', 10), 1);
   const limit = Math.min(parseInt(req.query.limit || '12', 10), 50);
@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
     .limit(limit)
     .lean();
 
-  // غلاف بسيط: أول صورة
+
   const data = items.map(x => ({
     _id: x._id, name: x.name, slug: x.slug,
     coverImage: x.images?.[0]?.url || null,
@@ -43,7 +43,7 @@ router.get('/:slugOrId', async (req, res) => {
   res.json(doc);
 });
 
-// ======= Admin: create/update/delete =======
+
 
 const createSchema = z.object({
   body: z.object({
@@ -60,10 +60,11 @@ router.post('/',
       createSchema.parse({ body: req.body });
       let slug = slugify(req.body.name);
       if (!slug) slug = `p-${Date.now().toString(36)}`;
-      // تأكيد فريد
+    
       if (await Product.exists({ slug })) slug += '-' + Math.random().toString(36).slice(2,6);
 
-      const images = await handleUploads(req.files || []);
+     const images = await handleUploads(req.files || [], { folder: 'products' });
+
       const p = await Product.create({
         name: req.body.name,
         slug,
@@ -81,7 +82,7 @@ const updateSchema = z.object({
   body: z.object({
     name: z.string().min(2).max(120).optional(),
     description: z.string().min(5).max(5000).optional(),
-    removePublicIds: z.string().optional() // comma-separated list of Cloudinary public_id to remove
+    removePublicIds: z.string().optional() 
   })
 });
 
@@ -106,7 +107,8 @@ router.put('/:id',
       if (typeof req.body.description === 'string') doc.description = req.body.description;
 
       if (req.files?.length) {
-        const added = await handleUploads(req.files);
+       const added = await handleUploads(req.files, { folder: 'products' });
+
         doc.images.push(...added);
       }
       if (req.body.removePublicIds) {
@@ -134,7 +136,7 @@ router.delete('/:id',
     if (!isObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid id' });
     const doc = await Product.findById(req.params.id);
     if (!doc) return res.status(404).json({ error: 'Not found' });
-    // احذف صور Cloudinary لو فيه
+   
     for (const img of (doc.images || [])) { if (img.public_id) await deleteImage(img.public_id); }
     await doc.deleteOne();
     res.json({ ok: true });

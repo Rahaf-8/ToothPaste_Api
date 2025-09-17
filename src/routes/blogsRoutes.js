@@ -10,7 +10,7 @@ const Blog = require('../models/Blog');
 const router = express.Router();
 function isObjectId(s) { return mongoose.Types.ObjectId.isValid(s); }
 
-// ======= Public: list (عناوين/غلاف) + detail =======
+
 router.get('/', async (req, res) => {
   const page = Math.max(parseInt(req.query.page || '1', 10), 1);
   const limit = Math.min(parseInt(req.query.limit || '10', 10), 50);
@@ -36,7 +36,7 @@ router.get('/:slugOrId', async (req, res) => {
   res.json(doc);
 });
 
-// ======= Admin: create/update/delete =======
+
 const createSchema = z.object({ body: z.object({ title: z.string().min(3).max(200), body: z.string().min(10) }) });
 
 router.post('/',
@@ -48,7 +48,7 @@ router.post('/',
       let slug = slugify(req.body.title);
       if (!slug) slug = `b-${Date.now().toString(36)}`;
       if (await Blog.exists({ slug })) slug += '-' + Math.random().toString(36).slice(2,6);
-      const images = await handleUploads(req.files || []);
+     const images = await handleUploads(req.files || [], { folder: 'blogs' });
       const item = await Blog.create({ title: req.body.title, slug, body: req.body.body, images });
       res.status(201).json(item);
     } catch (e) {
@@ -86,7 +86,8 @@ router.put('/:id',
       if (typeof req.body.body === 'string') doc.body = req.body.body;
 
       if (req.files?.length) {
-        const added = await handleUploads(req.files);
+       const added = await handleUploads(req.files, { folder: 'blogs' });
+
         doc.images.push(...added);
       }
       if (req.body.removePublicIds) {

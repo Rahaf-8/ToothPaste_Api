@@ -9,7 +9,7 @@ const cfg = require('../config');
 
 const router = express.Router();
 
-// helper: "15m" / "7d" -> ms
+
 function ms(s) {
   const m = String(s).match(/^(\d+)(ms|s|m|h|d)$/);
   if (!m) return 0;
@@ -18,7 +18,7 @@ function ms(s) {
   return n * mult;
 }
 
-// POST /api/auth/login
+
 router.post('/login', loginLimiter(), async (req, res) => {
   try {
     const body = z.object({
@@ -51,7 +51,6 @@ router.post('/login', loginLimiter(), async (req, res) => {
   }
 });
 
-// POST /api/auth/refresh
 router.post('/refresh', async (req, res) => {
   const body = z.object({ refreshToken: z.string().min(10) }).safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: 'Invalid input' });
@@ -77,7 +76,7 @@ router.post('/refresh', async (req, res) => {
   }
 });
 
-// POST /api/auth/logout
+
 router.post('/logout', async (req, res) => {
   const body = z.object({ refreshToken: z.string().min(10) }).safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: 'Invalid input' });

@@ -30,34 +30,34 @@ async function main() {
 
   const app = express();
 
-  // لو ورا بروكسي (Render/Nginx)؛ يفيد req.ip
+
   app.set('trust proxy', true);
 
   // parsers
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true }));
 
-  // security bundle (helmet + cors + rate-limit + hpp + sanitize ...)
+ 
   security(app);
 
-  // static (للرفع المحلي لو Cloudinary مش مفعّل)
+  
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-  // health
+  
   app.get('/healthz', (_req, res) => res.json({ ok: true, env: cfg.env }));
 
-  // ====== API ROUTES (قبل 404) ======
+
   app.use('/api/admin',    adminRoutes);
   app.use('/api/auth',     authRoutes);
   app.use('/api/products', productRoutes);
   app.use('/api/blogs',    blogRoutes);
   app.use('/api/faqs',     faqRoutes);
-  // ====== END API ROUTES ======
 
-  // 404 لازم آخر حاجة
+
+ 
   app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 
-  // error handler عام
+ 
   app.use((err, _req, res, _next) => {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

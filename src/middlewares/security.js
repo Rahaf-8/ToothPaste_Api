@@ -29,7 +29,7 @@ function security(app) {
     crossOriginResourcePolicy: { policy: 'same-site' }
   }));
   if (process.env.NODE_ENV === 'production') {
-    app.use(helmet.hsts({ maxAge: 15552000 })); // ~180 يوم
+    app.use(helmet.hsts({ maxAge: 15552000 })); 
   }
 
   app.use(compression());
@@ -37,12 +37,11 @@ function security(app) {
   app.use(hpp());
   app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-  // تنظيف + حظر مفاتيح خبيثة
+  
   const { sanitizeObject } = require('../utils/sanitize');
   app.use((req, _res, next) => { if (req.body) req.body = sanitizeObject(req.body); next(); });
   app.use(guardKeys);
 
-  // Global limiter
   app.use(rateLimit({ windowMs: 15*60*1000, max: 1000, standardHeaders: true, legacyHeaders: false }));
 }
 
@@ -54,10 +53,9 @@ function loginLimiter() {
   });
 }
 
-// limiter خاص لروتات الأدمن (CRUD)
 function adminLimiter() {
   return rateLimit({
-    windowMs: 15*60*1000, max: 200, // عدّليها حسب الحاجة
+    windowMs: 15*60*1000, max: 200, 
     standardHeaders: true, legacyHeaders: false
   });
 }module.exports = { security, loginLimiter, adminLimiter };

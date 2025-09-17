@@ -7,13 +7,13 @@ const User = require('../models/User');
 
 const router = express.Router();
 
-// تشخيص سريع (ممكن تمسحيه بعد ما تتأكدي)
+
 router.get('/__ping', (_req, res) => res.json({ ok: true, base: '/api/admin' }));
 
-// حمي كل مسارات الأدمن مرة واحدة
+
 router.use(authRequired, adminOnly);
 
-// GET /api/admin/me
+
 router.get('/me', async (req, res) => {
   const u = await User.findById(req.user.sub)
     .select('email role createdAt updatedAt')
@@ -22,7 +22,7 @@ router.get('/me', async (req, res) => {
   res.json(u);
 });
 
-// PATCH /api/admin/email
+
 router.patch('/email', async (req, res) => {
   const schema = z.object({
     currentPassword: z.string().min(8),
@@ -43,11 +43,11 @@ router.patch('/email', async (req, res) => {
   user.email = newEmail;
   await user.save();
 
-  await RefreshToken.deleteMany({ userId: user._id }); // إجبار إعادة تسجيل الدخول
+  await RefreshToken.deleteMany({ userId: user._id }); 
   res.json({ ok: true, message: 'Email updated. Please login again.' });
 });
 
-// PATCH /api/admin/password
+
 router.patch('/password', async (req, res) => {
   const schema = z.object({
     currentPassword: z.string().min(8),
